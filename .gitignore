@@ -1,1 +1,3 @@
-copilot-instructions.md
+node_modules/
+npm-debug.log*
+.DS_Store
