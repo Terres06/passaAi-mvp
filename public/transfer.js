@@ -1,6 +1,17 @@
 const CHUNK_SIZE = 16 * 1024;
 const BUFFER_LIMIT = 1024 * 1024;
 
+function createTransferId() {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi && typeof cryptoApi.getRandomValues === "function") {
+    const values = new Uint32Array(3);
+    cryptoApi.getRandomValues(values);
+    return `${values[0].toString(36)}-${values[1].toString(36)}-${values[2].toString(36)}`;
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 function waitForBuffer(channel) {
   if (channel.bufferedAmount <= BUFFER_LIMIT) return Promise.resolve();
 
@@ -15,7 +26,7 @@ function waitForBuffer(channel) {
 
 export async function sendFile(peerLink, file, onProgress) {
   const channel = peerLink.getDataChannel();
-  const id = crypto.randomUUID();
+  const id = createTransferId();
   const metadata = {
     t: "meta",
     id,

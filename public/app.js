@@ -1,5 +1,5 @@
 import { PeerLink } from "./rtc.js?v=4";
-import { createReceiver, sendFile } from "./transfer.js?v=1";
+import { createReceiver, sendFile } from "./transfer.js?v=2";
 
 const homeView = document.querySelector("#home-view");
 const roomView = document.querySelector("#room-view");
