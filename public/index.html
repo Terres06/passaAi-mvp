@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css?v=3">
+    <link rel="stylesheet" href="/style.css?v=4">
   </head>
   <body>
     <main class="app-shell">
@@ -68,9 +68,17 @@
         </section>
 
         <p id="room-notice" class="notice hidden" role="alert"></p>
+        <div id="recovery-actions" class="recovery-actions hidden">
+          <button id="reconnect-room" class="button button-primary" type="button">
+            Reconectar
+          </button>
+          <button id="new-room" class="button button-secondary" type="button">
+            Nova sala
+          </button>
+        </div>
         <button id="leave-room" class="button button-link" type="button">Voltar</button>
       </section>
     </main>
-    <script type="module" src="/app.js?v=6"></script>
+    <script type="module" src="/app.js?v=7"></script>
   </body>
 </html>

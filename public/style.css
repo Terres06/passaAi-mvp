@@ -434,6 +434,12 @@ progress::-moz-progress-bar {
   background: #d1fae5;
 }
 
+.recovery-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 @keyframes pulse {
   0%,
   100% {

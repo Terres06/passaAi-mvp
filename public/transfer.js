@@ -44,7 +44,11 @@ export async function sendFile(peerLink, file, onProgress) {
     const chunk = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
     peerLink.send(chunk);
     const sent = offset + chunk.byteLength;
-    onProgress({ ...metadata, received: sent, percent: Math.round((sent / file.size) * 100) });
+    onProgress({
+      ...metadata,
+      received: sent,
+      percent: file.size === 0 ? 100 : Math.round((sent / file.size) * 100),
+    });
   }
 
   await waitForBuffer(channel);
@@ -59,6 +63,9 @@ export function createReceiver(onProgress, onComplete, onError) {
       if (typeof data === "string") {
         const message = JSON.parse(data);
         if (message.t === "meta") {
+          if (incoming) {
+            throw new Error("Já existe um arquivo sendo recebido.");
+          }
           if (!message.id || typeof message.name !== "string"
             || !Number.isFinite(message.size) || message.size < 0) {
             throw new Error("Metadados de arquivo inválidos.");

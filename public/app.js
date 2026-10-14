@@ -19,11 +19,16 @@ const transferArea = document.querySelector("#transfer-area");
 const dropZone = document.querySelector("#drop-zone");
 const fileInput = document.querySelector("#file-input");
 const fileHistory = document.querySelector("#file-history");
+const recoveryActions = document.querySelector("#recovery-actions");
+const reconnectRoomButton = document.querySelector("#reconnect-room");
+const newRoomButton = document.querySelector("#new-room");
 
 let socket;
 let roomCode;
 let peerLink;
 let receiver;
+let roomMode;
+let sendingFile = false;
 
 function setNotice(element, message) {
   element.textContent = message;
@@ -44,7 +49,13 @@ function openRoomView() {
   connectionType.textContent = "";
   transferArea.classList.add("hidden");
   fileHistory.replaceChildren();
+  recoveryActions.classList.add("hidden");
   setNotice(roomNotice, "");
+}
+
+function showRecovery(message) {
+  setNotice(roomNotice, message);
+  recoveryActions.classList.remove("hidden");
 }
 
 function getWebSocketUrl() {
@@ -74,6 +85,7 @@ async function showRoomDetails() {
 function handleServerMessage(message) {
   if (message.type === "created" || message.type === "joined") {
     roomCode = message.room;
+    recoveryActions.classList.add("hidden");
     showRoomDetails().catch(() => {
       setStatus("Erro ao preparar o convite", "error");
       setNotice(roomNotice, "Não foi possível gerar o QR Code da sala.");
@@ -87,7 +99,7 @@ function handleServerMessage(message) {
 
   if (message.type === "peer-left") {
     setStatus("Aguardando outro dispositivo...", "waiting");
-    setNotice(roomNotice, "O outro dispositivo saiu da sala.");
+    showRecovery("O outro dispositivo saiu da sala.");
     return;
   }
 
@@ -96,7 +108,7 @@ function handleServerMessage(message) {
       ? "Essa sala já está cheia."
       : "Sala não encontrada.";
     setStatus(errorMessage, "error");
-    setNotice(roomNotice, errorMessage);
+    showRecovery(errorMessage);
     return;
   }
 }
@@ -116,8 +128,10 @@ function setupPeerLink(role) {
       peerLink.send("ping");
     },
     onClose: () => {
-      setStatus("Aguardando outro dispositivo...", "waiting");
+      setStatus("Conexão perdida", "error");
       connectionType.classList.add("hidden");
+      transferArea.classList.add("hidden");
+      showRecovery("A conexão entre os dispositivos foi encerrada.");
     },
     onMessage: (data) => {
       if (data === "ping") {
@@ -187,6 +201,11 @@ function completeTransfer(metadata, blob, isIntact) {
 
 async function sendSelectedFile(file) {
   if (!file || !peerLink) return;
+  if (sendingFile) {
+    showRecovery("Aguarde o envio atual terminar antes de escolher outro arquivo.");
+    return;
+  }
+  sendingFile = true;
   try {
     let item;
     await sendFile(peerLink, file, (progress) => {
@@ -201,10 +220,13 @@ async function sendSelectedFile(file) {
     item.querySelector(".file-result").className = "file-result file-success";
   } catch (error) {
     setNotice(roomNotice, `Não foi possível enviar o arquivo: ${error.message}`);
+  } finally {
+    sendingFile = false;
   }
 }
 
 function connectToRoom({ create, room }) {
+  roomMode = create ? "create" : "join";
   socket = new WebSocket(getWebSocketUrl());
 
   socket.addEventListener("open", () => {
@@ -224,13 +246,13 @@ function connectToRoom({ create, room }) {
 
   socket.addEventListener("error", () => {
     setStatus("Erro de conexão", "error");
-    setNotice(roomNotice, "Não foi possível conectar ao servidor.");
+    showRecovery("Não foi possível conectar ao servidor.");
   });
 
   socket.addEventListener("close", () => {
     if (!roomView.classList.contains("hidden")) {
       setStatus("Conexão encerrada", "error");
-      setNotice(roomNotice, "A conexão com o servidor foi encerrada.");
+      showRecovery("A conexão com o servidor foi encerrada.");
     }
   });
 }
@@ -249,6 +271,19 @@ function joinRoom(room) {
 createRoomButton.addEventListener("click", () => {
   openRoomView();
   connectToRoom({ create: true });
+});
+
+reconnectRoomButton.addEventListener("click", () => {
+  if (peerLink) peerLink.close();
+  if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
+  openRoomView();
+  connectToRoom({ create: roomMode === "create", room: roomCode });
+});
+
+newRoomButton.addEventListener("click", () => {
+  if (peerLink) peerLink.close();
+  if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
+  location.href = "/";
 });
 
 showJoinButton.addEventListener("click", () => {
