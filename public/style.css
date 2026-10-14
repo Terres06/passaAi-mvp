@@ -265,9 +265,9 @@ label {
 }
 
 .transfer-area h2 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-family: Merriweather, serif;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
 }
 
 .drop-zone {
@@ -276,27 +276,29 @@ label {
   justify-items: center;
   min-height: 112px;
   padding: 24px 16px;
-  border: 2px dashed #7dd3fc;
-  border-radius: 12px;
-  color: #075985;
-  background: #f0f9ff;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: #0284c7;
   cursor: pointer;
   text-align: center;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  box-shadow: 0 8px 18px #0284c740;
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 .drop-zone span {
+  font-size: 1.08rem;
   font-weight: 700;
 }
 
 .drop-zone small {
-  color: #475569;
+  color: #e0f2fe;
 }
 
 .drop-zone-active {
-  border-color: #0284c7;
-  background: #e0f2fe;
+  background: #0369a1;
   transform: scale(1.01);
+  box-shadow: 0 10px 22px #0284c759;
 }
 
 .file-history {
@@ -388,7 +390,27 @@ progress::-moz-progress-bar {
 }
 
 .download-link {
-  color: #0284c7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 4px;
+  border-radius: 9px;
+  padding: 9px 16px;
+  color: #fff;
+  background: #10b981;
+  box-shadow: 0 5px 12px #10b98140;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.download-link:hover {
+  background: #059669;
+}
+
+.download-link:active {
+  transform: translateY(1px);
 }
 
 .qr-code {

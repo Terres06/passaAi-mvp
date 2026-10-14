@@ -3,6 +3,7 @@ import { createReceiver, sendFile } from "./transfer.js?v=2";
 
 const homeView = document.querySelector("#home-view");
 const roomView = document.querySelector("#room-view");
+const brand = document.querySelector(".brand");
 const createRoomButton = document.querySelector("#create-room");
 const showJoinButton = document.querySelector("#show-join");
 const joinForm = document.querySelector("#join-form");
@@ -37,6 +38,7 @@ function setStatus(message, type) {
 function openRoomView() {
   homeView.classList.add("hidden");
   roomView.classList.remove("hidden");
+  brand.classList.add("hidden");
   setStatus("Aguardando outro dispositivo...", "waiting");
   connectionType.classList.add("hidden");
   connectionType.textContent = "";
@@ -119,7 +121,6 @@ function setupPeerLink(role) {
     },
     onMessage: (data) => {
       if (data === "ping") {
-        setNotice(roomNotice, "Ping recebido: conexão funcionando.");
         return;
       }
       receiver(data);
