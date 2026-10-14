@@ -140,9 +140,7 @@ webSocketServer.on("connection", (socket) => {
       send(socket, { type: "joined", room });
 
       for (const peer of peers) {
-        if (peer !== socket) {
-          send(peer, { type: "peer-joined" });
-        }
+        send(peer, { type: "peer-joined" });
       }
       return;
     }
