@@ -1,3 +1,5 @@
+import { PeerLink } from "./rtc.js?v=3";
+
 const homeView = document.querySelector("#home-view");
 const roomView = document.querySelector("#room-view");
 const createRoomButton = document.querySelector("#create-room");
@@ -7,12 +9,14 @@ const roomInput = document.querySelector("#room-code");
 const roomCodeDisplay = document.querySelector("#room-code-display");
 const qrCode = document.querySelector("#qr-code");
 const connectionStatus = document.querySelector("#connection-status");
+const connectionType = document.querySelector("#connection-type");
 const homeNotice = document.querySelector("#home-notice");
 const roomNotice = document.querySelector("#room-notice");
 const leaveRoomButton = document.querySelector("#leave-room");
 
 let socket;
 let roomCode;
+let peerLink;
 
 function setNotice(element, message) {
   element.textContent = message;
@@ -28,6 +32,8 @@ function openRoomView() {
   homeView.classList.add("hidden");
   roomView.classList.remove("hidden");
   setStatus("Aguardando outro dispositivo...", "waiting");
+  connectionType.classList.add("hidden");
+  connectionType.textContent = "";
   setNotice(roomNotice, "");
 }
 
@@ -66,7 +72,6 @@ function handleServerMessage(message) {
   }
 
   if (message.type === "peer-joined") {
-    setStatus("Dispositivo conectado", "connected");
     return;
   }
 
@@ -86,11 +91,32 @@ function handleServerMessage(message) {
   }
 }
 
+function setupPeerLink(role) {
+  peerLink = new PeerLink(socket, role, {
+    onOpen: async () => {
+      setStatus("Conectado via P2P", "connected");
+      connectionType.textContent = `Tipo de conexão: ${await peerLink.getConnectionType()}`;
+      connectionType.classList.remove("hidden");
+      peerLink.send("ping");
+    },
+    onClose: () => {
+      setStatus("Aguardando outro dispositivo...", "waiting");
+      connectionType.classList.add("hidden");
+    },
+    onMessage: (data) => {
+      if (data === "ping") {
+        setNotice(roomNotice, "Ping recebido: conexão funcionando.");
+      }
+    },
+  });
+}
+
 function connectToRoom({ create, room }) {
   socket = new WebSocket(getWebSocketUrl());
 
   socket.addEventListener("open", () => {
     const message = create ? { type: "create" } : { type: "join", room };
+    setupPeerLink(create ? "caller" : "callee");
     socket.send(JSON.stringify(message));
   });
 
@@ -143,6 +169,7 @@ joinForm.addEventListener("submit", (event) => {
 });
 
 leaveRoomButton.addEventListener("click", () => {
+  if (peerLink) peerLink.close();
   if (socket) socket.close();
   location.href = "/";
 });
