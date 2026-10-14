@@ -98,6 +98,13 @@ export class PeerLink {
     this.channel.send(data);
   }
 
+  getDataChannel() {
+    if (!this.channel || this.channel.readyState !== "open") {
+      throw new Error("O canal de dados ainda não está conectado.");
+    }
+    return this.channel;
+  }
+
   async getConnectionType() {
     const stats = await this.pc.getStats();
     let selectedPair;
