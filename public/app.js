@@ -1,4 +1,4 @@
-import { PeerLink } from "./rtc.js?v=4";
+import { PeerLink } from "./rtc.js?v=5";
 import { createReceiver, sendFile } from "./transfer.js?v=2";
 
 const homeView = document.querySelector("#home-view");
@@ -135,7 +135,7 @@ function formatFileSize(bytes) {
 
 function createTransferItem(metadata, direction) {
   const item = document.createElement("article");
-  item.className = "file-item";
+  item.className = `file-item file-item-${direction === "send" ? "sending" : "receiving"}`;
   item.dataset.transferId = metadata.id;
   const heading = document.createElement("div");
   heading.className = "file-item-heading";
@@ -162,6 +162,7 @@ function createTransferItem(metadata, direction) {
 function updateTransfer(metadata) {
   let item = fileHistory.querySelector(`[data-transfer-id="${metadata.id}"]`);
   if (!item) item = createTransferItem(metadata, "receive");
+  item.classList.add("file-item-active");
   item.querySelector("progress").value = metadata.percent;
   item.querySelector(".file-progress").textContent = `${metadata.percent}%`;
 }
@@ -189,9 +190,12 @@ async function sendSelectedFile(file) {
     let item;
     await sendFile(peerLink, file, (progress) => {
       if (!item) item = createTransferItem(progress, "send");
+      item.classList.add("file-item-active");
       item.querySelector("progress").value = progress.percent;
       item.querySelector(".file-progress").textContent = `${progress.percent}%`;
     });
+    item.classList.remove("file-item-active");
+    item.classList.add("file-item-complete");
     item.querySelector(".file-result").textContent = "Enviado";
     item.querySelector(".file-result").className = "file-result file-success";
   } catch (error) {

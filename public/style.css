@@ -2,6 +2,7 @@
   color: #0b1730;
   background: #f8fafc;
   font-family: "DM Sans", sans-serif;
+  font-synthesis: none;
 }
 
 * {
@@ -11,6 +12,10 @@
 body {
   min-width: 320px;
   margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, #e0f2fe 0, transparent 34%),
+    #f8fafc;
 }
 
 button,
@@ -23,34 +28,36 @@ button {
 }
 
 .app-shell {
-  width: min(100% - 24px, 560px);
+  width: min(100% - 24px, 620px);
   margin: 0 auto;
-  padding: 28px 0 48px;
+  padding: 36px 0 64px;
 }
 
 .brand {
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   text-align: center;
 }
 
 .brand-logo {
   display: block;
-  width: min(230px, 70vw);
+  width: min(220px, 68vw);
   height: auto;
   margin: 0 auto;
 }
 
 .brand p {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: #475569;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
 }
 
 .card {
-  padding: 24px;
+  padding: clamp(22px, 5vw, 36px);
   border: 1px solid #e2e8f0;
-  border-radius: 20px;
+  border-radius: 24px;
   background: #fff;
-  box-shadow: 0 12px 30px #0b17300d;
+  box-shadow: 0 20px 55px #0b173014, 0 3px 10px #0b173008;
 }
 
 .eyebrow {
@@ -64,7 +71,7 @@ button {
 }
 
 h1 {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   font-family: Merriweather, serif;
   font-size: clamp(1.5rem, 7vw, 2rem);
   line-height: 1.25;
@@ -75,6 +82,11 @@ h1 {
   margin: 0;
   color: #475569;
   line-height: 1.5;
+}
+
+.intro {
+  max-width: 38ch;
+  font-size: 1.05rem;
 }
 
 .actions {
@@ -91,15 +103,22 @@ h1 {
   border-radius: 10px;
   font-weight: 700;
   text-align: center;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.button:active {
+  transform: translateY(1px);
 }
 
 .button-primary {
   color: #fff;
   background: #0284c7;
+  box-shadow: 0 6px 14px #0284c733;
 }
 
 .button-primary:hover {
   background: #0369a1;
+  box-shadow: 0 8px 18px #0284c740;
 }
 
 .button-secondary {
@@ -159,6 +178,29 @@ label {
   gap: 16px;
 }
 
+.connection-type {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 14px 0 0;
+  border: 1px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #047857;
+  background: #ecfdf5;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.connection-type::before {
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  content: "";
+}
+
 .room-code {
   margin-bottom: 0;
   color: #0b1730;
@@ -175,6 +217,7 @@ label {
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
+  box-shadow: inset 0 0 0 1px #ffffff80;
 }
 
 .status-waiting {
@@ -190,6 +233,22 @@ label {
 .status-error {
   color: #b91c1c;
   background: #fee2e2;
+}
+
+.status-connected::before,
+.status-waiting::before,
+.status-error::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 6px 1px 0;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.status-waiting::before {
+  animation: pulse 1.6s ease-in-out infinite;
 }
 
 .invite-area {
@@ -215,13 +274,15 @@ label {
   display: grid;
   gap: 4px;
   justify-items: center;
-  padding: 22px 16px;
+  min-height: 112px;
+  padding: 24px 16px;
   border: 2px dashed #7dd3fc;
   border-radius: 12px;
   color: #075985;
   background: #f0f9ff;
   cursor: pointer;
   text-align: center;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .drop-zone span {
@@ -235,6 +296,7 @@ label {
 .drop-zone-active {
   border-color: #0284c7;
   background: #e0f2fe;
+  transform: scale(1.01);
 }
 
 .file-history {
@@ -249,6 +311,25 @@ label {
   padding: 12px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.file-item-sending {
+  border-left: 4px solid #0284c7;
+}
+
+.file-item-receiving {
+  border-left: 4px solid #8b5cf6;
+}
+
+.file-item-active {
+  border-color: #7dd3fc;
+  box-shadow: 0 5px 16px #0284c714;
+}
+
+.file-item-complete {
+  border-left-color: #10b981;
 }
 
 .file-item-heading {
@@ -270,7 +351,28 @@ label {
 
 progress {
   width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
   accent-color: #0284c7;
+  background: #e2e8f0;
+}
+
+progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: #0284c7;
+  transition: width 240ms ease;
+}
+
+progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: #0284c7;
 }
 
 .file-result {
@@ -305,6 +407,23 @@ progress {
   line-height: 1.4;
 }
 
+.notice-success {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .hidden {
   display: none;
 }
@@ -326,5 +445,10 @@ progress {
   .status {
     display: inline-block;
     margin-top: 12px;
+  }
+
+  .file-item-heading {
+    display: grid;
+    gap: 4px;
   }
 }
