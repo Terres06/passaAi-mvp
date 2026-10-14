@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Transfira arquivos diretamente entre seus dispositivos.">
+    <title>PassaAí — Mandou, passou.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="brand">
+        <img src="/logo.png" alt="PassaAí" class="brand-logo">
+        <p>Mandou, passou.</p>
+      </header>
+
+      <section id="home-view" class="card">
+        <h1>Envie arquivos sem complicação</h1>
+        <p class="intro">Direto de um dispositivo para o outro, sem login e sem nuvem.</p>
+        <div class="actions">
+          <button id="create-room" class="button button-primary">Criar uma sala</button>
+          <button id="show-join" class="button button-secondary">Entrar com código</button>
+        </div>
+        <form id="join-form" class="join-form hidden">
+          <label for="room-code">Código da sala</label>
+          <div class="join-row">
+            <input id="room-code" inputmode="numeric" maxlength="4" pattern="\d{4}" placeholder="0000" required>
+            <button class="button button-primary" type="submit">Entrar</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="room-view" class="card hidden">
+        <div class="room-heading">
+          <div>
+            <span class="eyebrow">Sua sala</span>
+            <h1 id="room-code-display">----</h1>
+          </div>
+          <span id="connection-status" class="status status-waiting">Aguardando</span>
+        </div>
+        <div id="invite-area" class="invite-area">
+          <p>Compartilhe o código ou escaneie o QR Code no outro dispositivo.</p>
+          <img id="qr-code" class="qr-code" alt="QR Code para entrar na sala">
+        </div>
+        <div id="transfer-area" class="hidden">
+          <p class="connected-message">Dispositivos conectados. Escolha um arquivo para enviar.</p>
+          <label for="file-input" class="button button-primary file-button">Escolher arquivo</label>
+          <input id="file-input" type="file" hidden>
+          <div id="transfers" class="transfers"></div>
+        </div>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <button id="leave-room" class="button button-link">Sair da sala</button>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
