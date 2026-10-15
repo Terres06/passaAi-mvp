@@ -23,7 +23,8 @@ compartilhe o código ou o QR Code.
    `http://192.168.0.10:3000`, ou escaneie o QR Code.
 3. Aguarde o status **Conectado via P2P** e envie arquivos em qualquer direção.
    É possível selecionar ou arrastar vários arquivos; eles entram em uma fila e
-   são transferidos um por vez.
+   são transferidos um por vez. No celular, toque em **Selecionar arquivos** e
+   marque os arquivos desejados no seletor do sistema.
 
 O navegador usa `ws://` em HTTP e `wss://` automaticamente quando a página está
 em HTTPS.

@@ -17,6 +17,7 @@ const roomNotice = document.querySelector("#room-notice");
 const leaveRoomButton = document.querySelector("#leave-room");
 const transferArea = document.querySelector("#transfer-area");
 const dropZone = document.querySelector("#drop-zone");
+const chooseFilesButton = document.querySelector("#choose-files");
 const fileInput = document.querySelector("#file-input");
 const fileHistory = document.querySelector("#file-history");
 const recoveryActions = document.querySelector("#recovery-actions");
@@ -338,6 +339,10 @@ leaveRoomButton.addEventListener("click", () => {
 fileInput.addEventListener("change", () => {
   enqueueFiles(fileInput.files);
   fileInput.value = "";
+});
+
+chooseFilesButton.addEventListener("click", () => {
+  fileInput.click();
 });
 
 for (const eventName of ["dragenter", "dragover"]) {

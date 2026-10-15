@@ -286,6 +286,17 @@ label {
   transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
+.button-file {
+  margin: 8px 0 4px;
+  color: #0284c7;
+  background: #fff;
+  box-shadow: none;
+}
+
+.button-file:hover {
+  background: #e0f2fe;
+}
+
 .drop-zone span {
   font-size: 1.08rem;
   font-weight: 700;
