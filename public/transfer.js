@@ -15,12 +15,21 @@ function createTransferId() {
 function waitForBuffer(channel) {
   if (channel.bufferedAmount <= BUFFER_LIMIT) return Promise.resolve();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const handleLow = () => {
-      channel.removeEventListener("bufferedamountlow", handleLow);
+      cleanup();
       resolve();
     };
+    const handleClosed = () => {
+      cleanup();
+      reject(new Error("O canal de transferência foi encerrado."));
+    };
+    const cleanup = () => {
+      channel.removeEventListener("bufferedamountlow", handleLow);
+      channel.removeEventListener("close", handleClosed);
+    };
     channel.addEventListener("bufferedamountlow", handleLow);
+    channel.addEventListener("close", handleClosed);
   });
 }
 

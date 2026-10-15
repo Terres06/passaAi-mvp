@@ -28,7 +28,8 @@ let roomCode;
 let peerLink;
 let receiver;
 let roomMode;
-let sendingFile = false;
+const sendQueue = [];
+let processingQueue = false;
 
 function setNotice(element, message) {
   element.textContent = message;
@@ -49,6 +50,7 @@ function openRoomView() {
   connectionType.textContent = "";
   transferArea.classList.add("hidden");
   fileHistory.replaceChildren();
+  sendQueue.length = 0;
   recoveryActions.classList.add("hidden");
   setNotice(roomNotice, "");
 }
@@ -174,6 +176,18 @@ function createTransferItem(metadata, direction) {
   return item;
 }
 
+function createQueuedItem(file) {
+  const item = createTransferItem({
+    id: `queue-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: file.name,
+    size: file.size,
+  }, "send");
+  item.classList.add("file-item-queued");
+  item.querySelector(".file-progress").textContent = "Na fila";
+  item.querySelector(".file-result").textContent = "Aguardando envio";
+  return item;
+}
+
 function updateTransfer(metadata) {
   let item = fileHistory.querySelector(`[data-transfer-id="${metadata.id}"]`);
   if (!item) item = createTransferItem(metadata, "receive");
@@ -199,30 +213,49 @@ function completeTransfer(metadata, blob, isIntact) {
   }
 }
 
-async function sendSelectedFile(file) {
-  if (!file || !peerLink) return;
-  if (sendingFile) {
-    showRecovery("Aguarde o envio atual terminar antes de escolher outro arquivo.");
-    return;
-  }
-  sendingFile = true;
+async function processSendQueue() {
+  if (processingQueue || !peerLink) return;
+  processingQueue = true;
+
   try {
-    let item;
-    await sendFile(peerLink, file, (progress) => {
-      if (!item) item = createTransferItem(progress, "send");
+    while (sendQueue.length > 0) {
+      const queuedFile = sendQueue.shift();
+      const item = queuedFile.item;
+      item.dataset.transferId = `sending-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      item.classList.remove("file-item-queued");
       item.classList.add("file-item-active");
-      item.querySelector("progress").value = progress.percent;
-      item.querySelector(".file-progress").textContent = `${progress.percent}%`;
-    });
-    item.classList.remove("file-item-active");
-    item.classList.add("file-item-complete");
-    item.querySelector(".file-result").textContent = "Enviado";
-    item.querySelector(".file-result").className = "file-result file-success";
-  } catch (error) {
-    setNotice(roomNotice, `Não foi possível enviar o arquivo: ${error.message}`);
+      item.querySelector(".file-result").textContent = "Enviando";
+
+      try {
+        await sendFile(peerLink, queuedFile.file, (progress) => {
+          item.dataset.transferId = progress.id;
+          item.querySelector("progress").value = progress.percent;
+          item.querySelector(".file-progress").textContent = `${progress.percent}%`;
+        });
+        item.classList.remove("file-item-active");
+        item.classList.add("file-item-complete");
+        item.querySelector(".file-progress").textContent = "100%";
+        item.querySelector(".file-result").textContent = "Enviado";
+        item.querySelector(".file-result").className = "file-result file-success";
+      } catch (error) {
+        item.classList.remove("file-item-active");
+        item.classList.add("file-item-error");
+        item.querySelector(".file-result").textContent = "Falha no envio";
+        setNotice(roomNotice, `Não foi possível enviar "${queuedFile.file.name}": ${error.message}`);
+        break;
+      }
+    }
   } finally {
-    sendingFile = false;
+    processingQueue = false;
   }
+}
+
+function enqueueFiles(fileList) {
+  if (!peerLink) return;
+  for (const file of fileList) {
+    sendQueue.push({ file, item: createQueuedItem(file) });
+  }
+  processSendQueue();
 }
 
 function connectToRoom({ create, room }) {
@@ -303,8 +336,7 @@ leaveRoomButton.addEventListener("click", () => {
 });
 
 fileInput.addEventListener("change", () => {
-  const [file] = fileInput.files;
-  sendSelectedFile(file);
+  enqueueFiles(fileInput.files);
   fileInput.value = "";
 });
 
@@ -323,7 +355,7 @@ for (const eventName of ["dragleave", "drop"]) {
 }
 
 dropZone.addEventListener("drop", (event) => {
-  sendSelectedFile(event.dataTransfer.files[0]);
+  enqueueFiles(event.dataTransfer.files);
 });
 
 const initialRoom = new URLSearchParams(location.search).get("room");

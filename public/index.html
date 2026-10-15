@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css?v=4">
+    <link rel="stylesheet" href="/style.css?v=5">
   </head>
   <body>
     <main class="app-shell">
@@ -62,7 +62,7 @@
           <label id="drop-zone" class="drop-zone" for="file-input">
             <span>Enviar arquivo</span>
             <small>Escolha um arquivo ou arraste-o para esta área</small>
-            <input id="file-input" type="file" hidden>
+            <input id="file-input" type="file" multiple hidden>
           </label>
           <div id="file-history" class="file-history" aria-live="polite"></div>
         </section>
@@ -79,6 +79,6 @@
         <button id="leave-room" class="button button-link" type="button">Voltar</button>
       </section>
     </main>
-    <script type="module" src="/app.js?v=7"></script>
+    <script type="module" src="/app.js?v=8"></script>
   </body>
 </html>

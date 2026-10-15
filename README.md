@@ -22,6 +22,8 @@ compartilhe o código ou o QR Code.
 2. Abra no celular a URL `LAN` exibida no terminal, por exemplo
    `http://192.168.0.10:3000`, ou escaneie o QR Code.
 3. Aguarde o status **Conectado via P2P** e envie arquivos em qualquer direção.
+   É possível selecionar ou arrastar vários arquivos; eles entram em uma fila e
+   são transferidos um por vez.
 
 O navegador usa `ws://` em HTTP e `wss://` automaticamente quando a página está
 em HTTPS.
@@ -48,8 +50,8 @@ WebSocket use `wss://`.
 - A sala existe somente enquanto houver conexão com o servidor. Ao perder a
   conexão, use **Reconectar** ou **Nova sala**.
 - A transferência não pode ser retomada após queda e a sessão não é persistida.
-- Um envio por dispositivo é permitido por vez; iniciar vários envios
-  simultâneos não faz parte do protocolo.
+- Vários arquivos podem ser enfileirados, mas apenas um envio por dispositivo
+  ocorre por vez; a fila não é retomada automaticamente após uma queda.
 - A integridade é verificada pelo tamanho, não por hash criptográfico.
 - O tráfego WebRTC é protegido pelo transporte WebRTC, mas não há autenticação,
   expiração de código ou controle de acesso adicional.
