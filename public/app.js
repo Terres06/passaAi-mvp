@@ -1,5 +1,6 @@
 import { PeerLink } from "./rtc.js?v=5";
 import { createReceiver, sendFile } from "./transfer.js?v=3";
+import { zipSync } from "/vendor/fflate/browser.js";
 
 const homeView = document.querySelector("#home-view");
 const roomView = document.querySelector("#room-view");
@@ -20,6 +21,7 @@ const dropZone = document.querySelector("#drop-zone");
 const chooseFilesButton = document.querySelector("#choose-files");
 const fileInput = document.querySelector("#file-input");
 const fileHistory = document.querySelector("#file-history");
+const downloadAllButton = document.querySelector("#download-all");
 const recoveryActions = document.querySelector("#recovery-actions");
 const reconnectRoomButton = document.querySelector("#reconnect-room");
 const newRoomButton = document.querySelector("#new-room");
@@ -30,6 +32,7 @@ let peerLink;
 let receiver;
 let roomMode;
 let receivedFileNames = new Map();
+const receivedFiles = [];
 const sendQueue = [];
 let processingQueue = false;
 
@@ -53,6 +56,9 @@ function openRoomView() {
   transferArea.classList.add("hidden");
   fileHistory.replaceChildren();
   receivedFileNames = new Map();
+  receivedFiles.length = 0;
+  downloadAllButton.classList.add("hidden");
+  downloadAllButton.textContent = "Baixar todos";
   sendQueue.length = 0;
   recoveryActions.classList.add("hidden");
   setNotice(roomNotice, "");
@@ -159,8 +165,8 @@ function sanitizeFileName(name) {
 
 function getDownloadName(originalName) {
   const sanitizedName = sanitizeFileName(originalName);
-  const previousDownloads = receivedFileNames.get(originalName) || 0;
-  receivedFileNames.set(originalName, previousDownloads + 1);
+  const previousDownloads = receivedFileNames.get(sanitizedName) || 0;
+  receivedFileNames.set(sanitizedName, previousDownloads + 1);
 
   if (previousDownloads === 0) return sanitizedName;
 
@@ -169,6 +175,53 @@ function getDownloadName(originalName) {
   const baseName = hasExtension ? sanitizedName.slice(0, extensionStart) : sanitizedName;
   const extension = hasExtension ? sanitizedName.slice(extensionStart) : "";
   return `${baseName} (${previousDownloads})${extension}`;
+}
+
+function updateDownloadAllButton() {
+  downloadAllButton.classList.toggle("hidden", receivedFiles.length < 2);
+}
+
+function getZipFileName() {
+  const date = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  const timestamp = [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + `-${pad(date.getHours())}${pad(date.getMinutes())}`;
+  return `PassaAi-${timestamp}.zip`;
+}
+
+async function downloadAllFiles() {
+  if (receivedFiles.length < 2) return;
+
+  downloadAllButton.disabled = true;
+  downloadAllButton.textContent = "Preparando zip...";
+  setNotice(roomNotice, "");
+
+  try {
+    const zipEntries = Object.create(null);
+    for (const file of receivedFiles) {
+      zipEntries[file.downloadName] = new Uint8Array(await file.blob.arrayBuffer());
+    }
+
+    const zipData = zipSync(zipEntries, { level: 0 });
+    const zipUrl = URL.createObjectURL(new Blob([zipData], { type: "application/zip" }));
+    const download = document.createElement("a");
+    download.href = zipUrl;
+    download.download = getZipFileName();
+    download.click();
+    setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+  } catch (error) {
+    console.error("Erro ao preparar ZIP:", error);
+    setNotice(
+      roomNotice,
+      "Não foi possível preparar o ZIP. Talvez não haja memória suficiente para reunir os arquivos.",
+    );
+  } finally {
+    downloadAllButton.disabled = false;
+    downloadAllButton.textContent = "Baixar todos";
+  }
 }
 
 function createTransferItem(metadata, direction) {
@@ -225,9 +278,12 @@ function completeTransfer(metadata, blob, isIntact) {
   result.className = `file-result ${isIntact ? "file-success" : "file-error"}`;
 
   if (isIntact) {
+    const downloadName = getDownloadName(metadata.name);
+    receivedFiles.push({ blob, downloadName });
+    updateDownloadAllButton();
     const download = document.createElement("a");
     download.href = URL.createObjectURL(blob);
-    download.download = getDownloadName(metadata.name);
+    download.download = downloadName;
     download.textContent = "Baixar";
     download.className = "download-link";
     result.append(" ", download);
@@ -382,6 +438,8 @@ for (const eventName of ["dragleave", "drop"]) {
 dropZone.addEventListener("drop", (event) => {
   enqueueFiles(event.dataTransfer.files);
 });
+
+downloadAllButton.addEventListener("click", downloadAllFiles);
 
 const initialRoom = new URLSearchParams(location.search).get("room");
 if (initialRoom) {

@@ -14,6 +14,7 @@ const rooms = new Map();
 const port = Number(process.env.PORT) || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/vendor/fflate", express.static(path.join(__dirname, "node_modules", "fflate", "esm")));
 
 function getLanIp() {
   const interfaces = os.networkInterfaces();
