@@ -11,11 +11,16 @@ export class PeerLink {
     this.role = role;     // 'caller' (quem criou a sala) ou 'callee' (quem entrou)
     this.onOpen = callbacks.onOpen;       // Disparado quando o canal de dados é estabelecido
     this.onClose = callbacks.onClose;     // Disparado ao fechar a conexão
+    this.onConnectionFailure = callbacks.onConnectionFailure;
+    this.onDisconnected = callbacks.onDisconnected;
     this.onMessage = callbacks.onMessage; // Disparado ao receber dados pelo canal P2P
     this.channel = null;
     this.pendingCandidates = [];
     this.remoteDescriptionSet = false;
     this.closed = false;
+    this.connected = false;
+    this.connectionTimer = null;
+    this.issueReported = false;
 
     // Inicializa a instância principal do WebRTC
     this.pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
@@ -30,8 +35,22 @@ export class PeerLink {
 
     // Monitora falhas ou encerramento da conexão
     this.pc.onconnectionstatechange = () => {
-      if (["failed", "closed"].includes(this.pc.connectionState)) {
-        this.close();
+      console.info("WebRTC connectionState:", this.pc.connectionState);
+      if (this.pc.connectionState === "failed") {
+        this.reportConnectionFailure();
+      } else if (this.pc.connectionState === "disconnected" && this.connected) {
+        this.reportDisconnected();
+      } else if (this.pc.connectionState === "closed") {
+        this.close("closed");
+      }
+    };
+
+    this.pc.oniceconnectionstatechange = () => {
+      console.info("WebRTC iceConnectionState:", this.pc.iceConnectionState);
+      if (this.pc.iceConnectionState === "failed") {
+        this.reportConnectionFailure();
+      } else if (this.pc.iceConnectionState === "disconnected" && this.connected) {
+        this.reportDisconnected();
       }
     };
 
@@ -54,6 +73,10 @@ export class PeerLink {
    */
   async handleSocketMessage(message) {
     // Quando o segundo usuário entra na sala, o 'caller' inicia a negociação WebRTC
+    if (message.type === "peer-joined") {
+      this.startConnectionTimeout();
+    }
+
     if (message.type === "peer-joined" && this.role === "caller") {
       this.channel = this.pc.createDataChannel("files");
       this.setupChannel(this.channel);
@@ -109,10 +132,41 @@ export class PeerLink {
     if (this.channel === channel && channel.readyState === "open") return;
     this.channel = channel;
     channel.binaryType = "arraybuffer"; // Garante recepção de chunks como buffers binários
-    channel.onopen = () => this.onOpen?.();
-    channel.onclose = () => this.close();
-    channel.onerror = () => this.close();
+    channel.onopen = () => {
+      this.connected = true;
+      this.clearConnectionTimeout();
+      this.onOpen?.();
+    };
+    channel.onclose = () => this.close("disconnected");
+    channel.onerror = () => this.close("failed");
     channel.onmessage = ({ data }) => this.onMessage?.(data);
+  }
+
+  startConnectionTimeout() {
+    this.clearConnectionTimeout();
+    this.connectionTimer = setTimeout(() => {
+      if (!this.connected) this.reportConnectionFailure();
+    }, 15000);
+  }
+
+  clearConnectionTimeout() {
+    if (!this.connectionTimer) return;
+    clearTimeout(this.connectionTimer);
+    this.connectionTimer = null;
+  }
+
+  reportConnectionFailure() {
+    if (this.issueReported || this.connected) return;
+    this.issueReported = true;
+    this.onConnectionFailure?.();
+    this.close("failed");
+  }
+
+  reportDisconnected() {
+    if (this.issueReported) return;
+    this.issueReported = true;
+    this.onDisconnected?.();
+    this.close("disconnected");
   }
 
   /**
@@ -175,11 +229,12 @@ export class PeerLink {
   /**
    * Encerra com segurança o RTCDataChannel e a RTCPeerConnection.
    */
-  close() {
+  close(reason = "closed") {
     if (this.closed) return;
     this.closed = true;
+    this.clearConnectionTimeout();
     if (this.channel && this.channel.readyState !== "closed") this.channel.close();
     if (this.pc.signalingState !== "closed") this.pc.close();
-    this.onClose?.();
+    this.onClose?.(reason);
   }
 }

@@ -1,4 +1,4 @@
-import { PeerLink } from "./rtc.js?v=5";
+import { PeerLink } from "./rtc.js?v=6";
 import { createReceiver, sendFile } from "./transfer.js?v=3";
 import { zipSync } from "/vendor/fflate/browser.js";
 
@@ -25,12 +25,15 @@ const downloadAllButton = document.querySelector("#download-all");
 const recoveryActions = document.querySelector("#recovery-actions");
 const reconnectRoomButton = document.querySelector("#reconnect-room");
 const newRoomButton = document.querySelector("#new-room");
+const howItWorksButton = document.querySelector("#how-it-works");
+const howItWorksModal = document.querySelector("#how-it-works-modal");
 
 let socket;
 let roomCode;
 let peerLink;
 let receiver;
 let roomMode;
+let retryWithNewRoom = false;
 let receivedFileNames = new Map();
 const receivedFiles = [];
 const sendQueue = [];
@@ -66,6 +69,29 @@ function openRoomView() {
 
 function showRecovery(message) {
   setNotice(roomNotice, message);
+  recoveryActions.classList.remove("hidden");
+}
+
+function showConnectionFailure() {
+  retryWithNewRoom = true;
+  setStatus("Falha na conexão direta", "error");
+  transferArea.classList.add("hidden");
+  setNotice(
+    roomNotice,
+    "Não foi possível conectar diretamente. Algumas redes (como Wi-Fi de universidades e empresas) bloqueiam a conexão entre aparelhos. Tente na mesma rede doméstica, em um hotspot ou com o outro aparelho em dados móveis.",
+  );
+  reconnectRoomButton.textContent = "Tentar novamente";
+  newRoomButton.classList.add("hidden");
+  recoveryActions.classList.remove("hidden");
+}
+
+function showDisconnected() {
+  retryWithNewRoom = false;
+  setStatus("Conexão perdida", "error");
+  transferArea.classList.add("hidden");
+  setNotice(roomNotice, "Conexão perdida");
+  reconnectRoomButton.textContent = "Reconectar";
+  newRoomButton.classList.remove("hidden");
   recoveryActions.classList.remove("hidden");
 }
 
@@ -138,7 +164,10 @@ function setupPeerLink(role) {
       transferArea.classList.remove("hidden");
       peerLink.send("ping");
     },
-    onClose: () => {
+    onConnectionFailure: showConnectionFailure,
+    onDisconnected: showDisconnected,
+    onClose: (reason) => {
+      if (reason === "failed" || reason === "disconnected") return;
       setStatus("Conexão perdida", "error");
       connectionType.classList.add("hidden");
       transferArea.classList.add("hidden");
@@ -384,6 +413,10 @@ createRoomButton.addEventListener("click", () => {
 });
 
 reconnectRoomButton.addEventListener("click", () => {
+  if (retryWithNewRoom) {
+    location.href = "/";
+    return;
+  }
   if (peerLink) peerLink.close();
   if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
   openRoomView();
@@ -394,6 +427,10 @@ newRoomButton.addEventListener("click", () => {
   if (peerLink) peerLink.close();
   if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
   location.href = "/";
+});
+
+howItWorksButton.addEventListener("click", () => {
+  howItWorksModal.showModal();
 });
 
 showJoinButton.addEventListener("click", () => {

@@ -461,6 +461,29 @@ progress::-moz-progress-bar {
   margin-top: 16px;
 }
 
+.how-it-works-modal {
+  max-width: 420px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  color: #0b1730;
+}
+
+.how-it-works-modal::backdrop {
+  background: #0b173099;
+}
+
+.how-it-works-modal form {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+}
+
+.how-it-works-modal h2,
+.how-it-works-modal p {
+  margin: 0;
+}
+
 @keyframes pulse {
   0%,
   100% {

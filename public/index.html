@@ -81,10 +81,21 @@
           <button id="new-room" class="button button-secondary" type="button">
             Nova sala
           </button>
+          <button id="how-it-works" class="button button-secondary" type="button">
+            Como funciona
+          </button>
         </div>
         <button id="leave-room" class="button button-link" type="button">Voltar</button>
       </section>
     </main>
-    <script type="module" src="/app.js?v=11"></script>
+    <dialog id="how-it-works-modal" class="how-it-works-modal">
+      <form method="dialog">
+        <h2>Como funciona</h2>
+        <p>O PassaAí conecta os dois aparelhos diretamente, sem enviar os arquivos para um servidor.</p>
+        <p>Se a rede bloquear essa conexão, tente a mesma rede doméstica, um hotspot ou os dados móveis do outro aparelho.</p>
+        <button class="button button-primary" type="submit">Fechar</button>
+      </form>
+    </dialog>
+    <script type="module" src="/app.js?v=12"></script>
   </body>
 </html>
