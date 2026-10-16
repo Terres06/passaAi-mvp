@@ -1,5 +1,5 @@
 import { PeerLink } from "./rtc.js?v=5";
-import { createReceiver, sendFile } from "./transfer.js?v=2";
+import { createReceiver, sendFile } from "./transfer.js?v=3";
 
 const homeView = document.querySelector("#home-view");
 const roomView = document.querySelector("#room-view");
@@ -29,6 +29,7 @@ let roomCode;
 let peerLink;
 let receiver;
 let roomMode;
+let receivedFileNames = new Map();
 const sendQueue = [];
 let processingQueue = false;
 
@@ -51,6 +52,7 @@ function openRoomView() {
   connectionType.textContent = "";
   transferArea.classList.add("hidden");
   fileHistory.replaceChildren();
+  receivedFileNames = new Map();
   sendQueue.length = 0;
   recoveryActions.classList.add("hidden");
   setNotice(roomNotice, "");
@@ -151,6 +153,24 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function sanitizeFileName(name) {
+  return name.replace(/[\/\\:*?"<>|]/g, "") || "arquivo";
+}
+
+function getDownloadName(originalName) {
+  const sanitizedName = sanitizeFileName(originalName);
+  const previousDownloads = receivedFileNames.get(originalName) || 0;
+  receivedFileNames.set(originalName, previousDownloads + 1);
+
+  if (previousDownloads === 0) return sanitizedName;
+
+  const extensionStart = sanitizedName.lastIndexOf(".");
+  const hasExtension = extensionStart > 0 && extensionStart < sanitizedName.length - 1;
+  const baseName = hasExtension ? sanitizedName.slice(0, extensionStart) : sanitizedName;
+  const extension = hasExtension ? sanitizedName.slice(extensionStart) : "";
+  return `${baseName} (${previousDownloads})${extension}`;
+}
+
 function createTransferItem(metadata, direction) {
   const item = document.createElement("article");
   item.className = `file-item file-item-${direction === "send" ? "sending" : "receiving"}`;
@@ -207,7 +227,7 @@ function completeTransfer(metadata, blob, isIntact) {
   if (isIntact) {
     const download = document.createElement("a");
     download.href = URL.createObjectURL(blob);
-    download.download = metadata.name;
+    download.download = getDownloadName(metadata.name);
     download.textContent = "Baixar";
     download.className = "download-link";
     result.append(" ", download);

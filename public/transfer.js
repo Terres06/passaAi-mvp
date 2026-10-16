@@ -104,7 +104,12 @@ export function createReceiver(onProgress, onComplete, onError) {
             || !Number.isFinite(message.size) || message.size < 0) {
             throw new Error("Metadados de arquivo inválidos.");
           }
-          incoming = { ...message, chunks: [], received: 0 };
+          incoming = {
+            ...message,
+            name: message.name,
+            chunks: [],
+            received: 0,
+          };
         } else if (message.t === "end") {
           // Fim da transferência: reconstrói o Blob e verifica tamanho
           if (!incoming || incoming.id !== message.id) {
